@@ -5,7 +5,7 @@ class Plant {
 		this.fragment = null;
 
 		if(Array.isArray(seeds)) {
-			this.fragment = this.from(seeds);
+			this.fragment = Plant.from.call(this, seeds);
 		}
 	}
 	find(value) {
@@ -15,15 +15,25 @@ class Plant {
 		this.cache.get(value).remove();
 		this.cache.delete(value);
 	}
-	from(seeds) {
+	static grow(root, seeds, bool = true) {
+		if(bool) Plant.purge(root);
+		root.appendChild(Plant.from(seeds));
+	}
+	static from(seeds) {
 		const fragment = document.createDocumentFragment();
 		let node, tag, attributes, children;
+		const regexp = /on.+/;
 
+		// console.log('seeds:', seeds);
+		// console.log('seeds.forEach:', seeds.forEach);
 		seeds.forEach((seed, index, array) => {
 			[tag, attributes, ...children] = seed;
 			if(!tag) {
 				return; //instead of continue
 			}
+			// if(!attributes) {
+			// 	attributes = {};
+			// }
 			
 			node = document.createElement(tag);
 			if(attributes) {
@@ -33,19 +43,21 @@ class Plant {
 					if(tag === 'html') tag = 'innerHTML';
 					if(tag === 'class') tag = 'className';
 
-					// if(/^on.+/.test(key)) {
-					// 	console.log('istener');
-					// 	node.addEventListener(key, attributes[key]);
-					// } else
-					if(key !== '$') {
-						node[tag] = attributes[key];
-					} else {
+					if(key === '$') {
 						this.cache.set(attributes[key], node);
+						return;
 					}
+
+					if(/data\-.+/.test(key)) {
+						node.setAttribute(key, attributes[key]);
+						return;
+					}
+
+					node[tag] = attributes[key];
 				});
 			}
 			if(Array.isArray(children)) {
-				let fragment = this.from(children, node);
+				let fragment = Plant.from.call(this, children);
 				node.appendChild(fragment);
 			}
 
@@ -55,15 +67,16 @@ class Plant {
 		return fragment;
 	}
 	regrow(seeds) {
-		Plant.purgeNode(this.root);
-		this.root.appendChild(this.from(seeds));
+		Plant.purge(this.root);
+		this.root.appendChild(Plant.from.call(this, seeds));
 	}
 	grow(fresh = false) {
 		if(fresh) {
-			Plant.purgeNode(this.root);
+			Plant.purge(this.root);
 		}
 		
 		this.root.appendChild(this.fragment);
+		return this;
 	}
 	static get title() {
 		return document.title;
@@ -86,7 +99,7 @@ class Plant {
 	static refName(string) {
 		return document.getElementsByName(string);
 	}
-	static purgeNode(node) {
+	static purge(node) {
 		if(!node) {
 			return;
 		}
