@@ -30,18 +30,19 @@ class Plant {
 			[tag, attributes, ...children] = seed;
 			if(!tag) {
 				return; //instead of continue
+			}			
+			if(tag === 'space') {
+				// attributes is the textContent in this particular case
+				return fragment.appendChild(new window.Text(attributes || ' '));
 			}
-			// if(!attributes) {
-			// 	attributes = {};
-			// }
-			
+
 			node = document.createElement(tag);
 			if(attributes) {
 				Object.keys(attributes).forEach(key => {					
 					tag = key;
 					if(tag === 'text') tag = 'textContent';
-					if(tag === 'html') tag = 'innerHTML';
-					if(tag === 'class') tag = 'className';
+					else if(tag === 'html') tag = 'innerHTML';
+					else if(tag === 'class') tag = 'className';
 
 					if(key === '$') {
 						this.cache.set(attributes[key], node);
